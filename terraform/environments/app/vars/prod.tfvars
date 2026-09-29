@@ -1,0 +1,9 @@
+environment             = "prod"
+desired_count           = 2
+db_instance_class       = "db.t4g.small"
+db_multi_az             = true
+db_deletion_protection  = true
+enable_cdn              = true
+alarm_email             = "iuricardosopro@gmail.com"
+enable_waf              = true
+log_retention_days      = 30

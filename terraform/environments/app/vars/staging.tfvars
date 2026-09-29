@@ -1,0 +1,10 @@
+environment             = "staging"
+desired_count           = 1
+db_instance_class       = "db.t4g.small"
+db_multi_az             = false
+db_deletion_protection  = false
+enable_cdn              = true
+alarm_email             = "iuricardosopro@gmail.com"
+single_nat_gateway      = true
+enable_waf              = true
+log_retention_days      = 14
