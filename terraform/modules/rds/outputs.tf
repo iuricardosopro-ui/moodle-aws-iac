@@ -14,3 +14,7 @@ output "secret_arn" {
 output "security_group_id" {
   value = aws_security_group.rds.id
 }
+
+output "instance_id" {
+  value = aws_db_instance.moodle.id
+}
