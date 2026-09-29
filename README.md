@@ -30,9 +30,11 @@ FinOps tagging end to end.
   Terraform workspaces + `vars/<environment>.tfvars`) — modules:
   `network`, `alb`, `ecs`, `ecr`, `rds`, `efs`, `monitoring`, `cdn`, `dns`,
   `tags`, under [`terraform/modules`](terraform/modules)
-- **AWS**: VPC, ALB, ECS Fargate (app + scheduled cron task), ECR, RDS for
-  MySQL, EFS, CloudFront (optional), Route53 (optional), CloudWatch
-  Alarms/Dashboard, SNS, Secrets Manager, EventBridge, IAM
+- **AWS**: VPC (NAT per AZ by default), ALB (optional HTTPS listener),
+  ECS Fargate (app + scheduled cron task), ECR, RDS for MySQL, EFS,
+  CloudFront (optional), Route53 (optional), WAFv2 (optional, managed
+  rules + rate limiting), CloudWatch Alarms/Dashboard, SNS, Secrets
+  Manager, EventBridge, IAM
 - **Docker**: multi-stage build (`docker/Dockerfile`) — a throwaway stage
   fetches and unpacks Moodle, the runtime stage ships only `php:8.2-apache`
   plus the application code, with no build tools in the final image
@@ -87,14 +89,16 @@ them, in [docs/deployment-guide.md](docs/deployment-guide.md).
 
 ## What I'd still change for a heavier production load
 
-- **HTTPS listener on the ALB itself** (today TLS terminates at
-  CloudFront when `enable_cdn = true`; the ALB origin is still HTTP-only)
-- **NAT instance instead of NAT Gateway** for cost, mirroring the trade-off
-  made on the real client project this is inspired by (see
-  [cost-analysis.md](docs/cost-analysis.md))
+- **A real ACM certificate + domain**, to actually turn on the HTTPS
+  listener (`acm_certificate_arn`) and Route53 (`domain_name`) that
+  already exist as opt-in variables — there's no code left to write
+  here, just a domain to register
 - **Remote Terraform state backend** (S3 + DynamoDB lock table) — currently
   local state per workspace; scaffolded, commented out, in
   [`terraform/environments/app/versions.tf`](terraform/environments/app/versions.tf)
 - **A cache behavior for static theme assets** on CloudFront, once real
   traffic patterns justify the added complexity over the current
   no-cache-anywhere default
+- **tflint / checkov / tfsec in CI** — static analysis and security
+  scanning of the Terraform itself, before `plan` ever runs
+- **Automated tests** — none exist yet, at any level (module, integration)
