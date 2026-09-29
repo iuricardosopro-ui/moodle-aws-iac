@@ -60,9 +60,9 @@ resource "aws_db_instance" "moodle" {
   db_subnet_group_name  = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.rds.id]
 
-  multi_az                  = false # dev/portfolio environment; set true for production
+  multi_az                  = var.multi_az
   backup_retention_period   = 7
-  deletion_protection       = false # dev/portfolio environment; set true for production
+  deletion_protection       = var.deletion_protection
   skip_final_snapshot       = true
   publicly_accessible       = false
   auto_minor_version_upgrade = true

@@ -74,3 +74,24 @@ variable "route53_zone_id" {
   type        = string
   default     = ""
 }
+
+variable "desired_count" {
+  description = "Number of ECS tasks to run. 1 for dev, 2+ for staging/prod (requires the shared EFS storage already in place)."
+  type        = number
+  default     = 1
+}
+
+variable "db_instance_class" {
+  type    = string
+  default = "db.t4g.micro"
+}
+
+variable "db_multi_az" {
+  type    = bool
+  default = false
+}
+
+variable "db_deletion_protection" {
+  type    = bool
+  default = false
+}
