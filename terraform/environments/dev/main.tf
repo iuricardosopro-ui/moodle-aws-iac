@@ -114,3 +114,12 @@ module "monitoring" {
   alarm_email              = var.alarm_email
   tags                     = module.tags.tags
 }
+
+module "cdn" {
+  count  = var.enable_cdn ? 1 : 0
+  source = "../../modules/cdn"
+
+  project_name = "${var.project_name}-${var.environment}"
+  alb_dns_name = module.alb.dns_name
+  tags         = module.tags.tags
+}
