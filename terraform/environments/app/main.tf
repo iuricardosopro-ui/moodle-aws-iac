@@ -120,6 +120,7 @@ module "ecs" {
   efs_file_system_id        = module.efs.file_system_id
   efs_file_system_arn       = module.efs.file_system_arn
   efs_access_point_id       = module.efs.access_point_id
+  log_retention_days        = var.log_retention_days
   tags                      = module.tags.tags
 }
 
