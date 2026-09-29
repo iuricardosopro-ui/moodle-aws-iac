@@ -16,6 +16,12 @@ on:
         default: "plan"
         type: choice
         options: [plan, apply]
+      environment:
+        description: "Environment to target (selects the matching workspace and vars/<environment>.tfvars)"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, staging, prod]
 
 permissions:
   contents: read
@@ -23,7 +29,7 @@ permissions:
   id-token: write       # for OIDC auth to AWS (no long-lived keys)
 
 env:
-  TF_WORKING_DIR: terraform/environments/dev
+  TF_WORKING_DIR: terraform/environments/app
 
 jobs:
   lint:
@@ -70,9 +76,13 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
+      - name: terraform workspace select
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform workspace select -or-create ${{ github.event.inputs.environment || 'dev' }}
+
       - name: terraform plan
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform plan -no-color -out=tfplan
+        run: terraform plan -no-color -var-file="vars/${{ github.event.inputs.environment || 'dev' }}.tfvars" -out=tfplan
 
   apply:
     name: Apply
@@ -99,6 +109,10 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
+      - name: terraform workspace select
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform workspace select -or-create ${{ github.event.inputs.environment }}
+
       - name: terraform apply
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var-file="vars/${{ github.event.inputs.environment }}.tfvars"

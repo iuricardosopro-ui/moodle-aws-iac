@@ -44,3 +44,15 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "multi_az" {
+  description = "Standby replica in a second AZ. false for dev/staging, true for prod."
+  type        = bool
+  default     = false
+}
+
+variable "deletion_protection" {
+  description = "Blocks accidental `terraform destroy` / console deletion. false for dev/staging, true for prod."
+  type        = bool
+  default     = false
+}

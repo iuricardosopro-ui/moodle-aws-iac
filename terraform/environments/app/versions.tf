@@ -32,3 +32,13 @@ provider "aws" {
     tags = local.common_tags
   }
 }
+
+# Select the environment before plan/apply:
+#   terraform workspace new dev      # first time only
+#   terraform workspace select dev
+#   terraform plan  -var-file=vars/dev.tfvars
+#   terraform apply -var-file=vars/dev.tfvars
+#
+# Repeat with staging.tfvars / prod.tfvars in their own workspaces
+# (staging / prod). Each workspace keeps a fully separate state file,
+# so a mistake in one environment's plan can never touch another's.
