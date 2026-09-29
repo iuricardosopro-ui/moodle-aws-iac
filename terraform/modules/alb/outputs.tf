@@ -19,3 +19,8 @@ output "target_group_arn_suffix" {
   description = "Used as a CloudWatch metric dimension (AWS/ApplicationELB TargetGroup)."
   value       = aws_lb_target_group.moodle.arn_suffix
 }
+
+output "arn" {
+  description = "Used to attach a WAF Web ACL to this load balancer."
+  value       = aws_lb.this.arn
+}

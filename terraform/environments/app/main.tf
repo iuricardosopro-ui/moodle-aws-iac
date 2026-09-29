@@ -29,10 +29,11 @@ module "ecr" {
 module "alb" {
   source = "../../modules/alb"
 
-  project_name      = "${var.project_name}-${var.environment}"
-  vpc_id            = module.network.vpc_id
-  public_subnet_ids = module.network.public_subnet_ids
-  tags              = module.tags.tags
+  project_name         = "${var.project_name}-${var.environment}"
+  vpc_id               = module.network.vpc_id
+  public_subnet_ids    = module.network.public_subnet_ids
+  acm_certificate_arn  = var.acm_certificate_arn
+  tags                 = module.tags.tags
 }
 
 # Created here (not inside the ECS module) because both the ECS service and

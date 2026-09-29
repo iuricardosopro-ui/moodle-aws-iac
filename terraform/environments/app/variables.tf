@@ -101,3 +101,9 @@ variable "single_nat_gateway" {
   type        = bool
   default     = false
 }
+
+variable "acm_certificate_arn" {
+  description = "ACM certificate for HTTPS on the ALB (and, when enable_cdn is also true, on CloudFront). Empty by default — no domain is registered for this project yet."
+  type        = string
+  default     = ""
+}
