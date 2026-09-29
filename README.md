@@ -110,6 +110,6 @@ them, in [docs/deployment-guide.md](docs/deployment-guide.md).
 ## Author
 
 Iúri Bacharel Andrade Cardoso — Cloud/DevOps engineer.
-[LinkedIn](https://www.linkedin.com/) · [GitHub](https://github.com/iuricardosopro-ui)
+[GitHub](https://github.com/iuricardosopro-ui)
 
 Licensed under the [MIT License](LICENSE).
