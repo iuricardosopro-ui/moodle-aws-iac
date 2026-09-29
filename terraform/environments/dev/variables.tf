@@ -56,3 +56,9 @@ variable "alarm_email" {
   type        = string
   default     = ""
 }
+
+variable "enable_cdn" {
+  description = "Provisions a CloudFront distribution in front of the ALB. Off by default for dev; staging/prod turn it on via their own tfvars."
+  type        = bool
+  default     = false
+}
