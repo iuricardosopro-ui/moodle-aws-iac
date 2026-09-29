@@ -1,0 +1,61 @@
+name: Build & push Moodle image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docker/**"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write # OIDC auth to AWS, no static keys
+
+env:
+  ECR_REPOSITORY: moodle-portfolio-dev-moodle
+  AWS_REGION: us-east-1
+
+jobs:
+  build-and-push:
+    name: Build, scan and push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ECR_PUSH_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build image
+        working-directory: docker
+        run: |
+          docker build \
+            --tag "${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" \
+            --tag "${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" \
+            .
+
+      # Fails the build on HIGH/CRITICAL CVEs instead of shipping them silently.
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: "${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+          severity: "HIGH,CRITICAL"
+          exit-code: "1"
+
+      - name: Push image (immutable tag + latest)
+        run: |
+          docker push "${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+          docker push "${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
+
+      - name: Update ECS service with the new image
+        run: |
+          aws ecs update-service \
+            --cluster moodle-portfolio-dev-cluster \
+            --service moodle-portfolio-dev-moodle-svc \
+            --force-new-deployment
