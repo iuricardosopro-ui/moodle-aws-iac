@@ -19,3 +19,19 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+---
+
+## Scope
+
+This license covers the infrastructure code in this repository — the
+Terraform modules, Docker configuration, CI/CD workflows and documentation —
+written by the author.
+
+Moodle itself is separate, third-party software, (c) Moodle Pty Ltd and
+contributors, licensed under the GNU General Public License v3.0
+(https://download.moodle.org/releases/latest/COPYING.txt). This repository
+does not redistribute Moodle's source code; it deploys a Moodle Docker image
+onto AWS infrastructure. No claim of ownership or authorship over Moodle is
+made or implied.
