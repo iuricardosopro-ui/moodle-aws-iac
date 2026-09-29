@@ -61,6 +61,16 @@ resource "aws_security_group" "ecs_service" {
   tags = merge(module.tags.tags, { Name = "${var.project_name}-${var.environment}-ecs-sg" })
 }
 
+module "efs" {
+  source = "../../modules/efs"
+
+  project_name           = "${var.project_name}-${var.environment}"
+  vpc_id                 = module.network.vpc_id
+  private_subnet_ids     = module.network.private_subnet_ids
+  ecs_security_group_id  = aws_security_group.ecs_service.id
+  tags                   = module.tags.tags
+}
+
 module "rds" {
   source = "../../modules/rds"
 
@@ -85,5 +95,8 @@ module "ecs" {
   db_endpoint               = module.rds.endpoint
   db_name                   = module.rds.db_name
   db_secret_arn             = module.rds.secret_arn
+  efs_file_system_id        = module.efs.file_system_id
+  efs_file_system_arn       = module.efs.file_system_arn
+  efs_access_point_id       = module.efs.access_point_id
   tags                      = module.tags.tags
 }

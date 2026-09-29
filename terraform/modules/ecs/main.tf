@@ -65,6 +65,20 @@ resource "aws_ecs_task_definition" "moodle" {
   execution_role_arn       = aws_iam_role.execution.arn
   task_role_arn            = aws_iam_role.task.arn
 
+  volume {
+    name = "moodledata"
+
+    efs_volume_configuration {
+      file_system_id     = var.efs_file_system_id
+      transit_encryption = "ENABLED"
+
+      authorization_config {
+        access_point_id = var.efs_access_point_id
+        iam             = "ENABLED"
+      }
+    }
+  }
+
   container_definitions = jsonencode([
     {
       name      = "moodle"
@@ -72,6 +86,9 @@ resource "aws_ecs_task_definition" "moodle" {
       essential = true
       portMappings = [
         { containerPort = 8080, protocol = "tcp" }
+      ]
+      mountPoints = [
+        { sourceVolume = "moodledata", containerPath = "/var/www/moodledata", readOnly = false }
       ]
       environment = [
         { name = "MOODLE_DATABASE_HOST", value = var.db_endpoint },
@@ -93,6 +110,23 @@ resource "aws_ecs_task_definition" "moodle" {
   ])
 
   tags = var.tags
+}
+
+# Simplified to the whole filesystem rather than scoped to the access
+# point ARN, to avoid a data-source dependency on account ID here — the
+# access point's own POSIX root/permissions already constrain what a
+# mount can see and write.
+data "aws_iam_policy_document" "efs_access" {
+  statement {
+    actions   = ["elasticfilesystem:ClientMount", "elasticfilesystem:ClientWrite"]
+    resources = [var.efs_file_system_arn]
+  }
+}
+
+resource "aws_iam_role_policy" "task_efs_access" {
+  name   = "${var.project_name}-efs-access"
+  role   = aws_iam_role.task.id
+  policy = data.aws_iam_policy_document.efs_access.json
 }
 
 data "aws_region" "current" {}
