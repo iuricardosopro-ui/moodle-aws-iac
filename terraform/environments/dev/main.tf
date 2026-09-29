@@ -123,3 +123,12 @@ module "cdn" {
   alb_dns_name = module.alb.dns_name
   tags         = module.tags.tags
 }
+
+module "dns" {
+  source = "../../modules/dns"
+
+  domain_name               = var.domain_name
+  route53_zone_id           = var.route53_zone_id
+  cloudfront_domain_name    = coalesce(one(module.cdn[*].domain_name), "")
+  cloudfront_hosted_zone_id = coalesce(one(module.cdn[*].hosted_zone_id), "")
+}

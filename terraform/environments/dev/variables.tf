@@ -62,3 +62,15 @@ variable "enable_cdn" {
   type        = bool
   default     = false
 }
+
+variable "domain_name" {
+  description = "Custom domain for Route53 + CloudFront. Empty by default — this portfolio project does not own a registered domain, so the app is reached via the ALB/CloudFront AWS-provided DNS name instead."
+  type        = string
+  default     = ""
+}
+
+variable "route53_zone_id" {
+  description = "Existing Route53 hosted zone ID for domain_name. Empty by default (see domain_name)."
+  type        = string
+  default     = ""
+}
