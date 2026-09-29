@@ -71,6 +71,54 @@ AZ**, see [architecture.md](architecture.md)), `db_multi_az = true`,
 | RDS Multi-AZ (standby replica ≈ doubles instance cost) | +~$12 (instance) +~$2.30 (storage) | +~$14 |
 | **Total** | | **~$199/month** |
 
+## Cost optimization playbook, from a real production deployment
+
+The real client Moodle-on-AWS deployment this project is inspired by
+went through a documented cost optimization pass, moving from
+~$370/month (initial homolog + prod both running) down to ~$95–129/
+month in production, against an internal budget target of R$600/month
+(≈$105–110 at the exchange rate at the time — not $600 USD; worth
+being precise about that distinction, since it's easy to misremember
+a Reais figure as dollars a few months later). Four techniques did
+almost all of the work, and they generalize beyond that one project:
+
+1. **CDN caching scoped to static assets only, never dynamic pages.**
+   The first attempt cached *everything* for 2 hours and broke login
+   (session cookies got served from cache). The fix: cache
+   theme/CSS/JS/images aggressively (a year, in some cases), and keep
+   every dynamic/PHP path at `default_ttl = 0`. Real saving: ~$135–
+   140/month at that project's traffic level, mostly by no longer
+   hitting the ALB/ECS origin for every asset request.
+   **This project's `cdn` module doesn't do this yet** — every path is
+   `default_ttl = 0` (see [architecture.md](architecture.md)), the
+   safe-but-simple version of the *first* (broken) attempt's opposite
+   mistake. At this project's traffic level the dollar saving would be
+   small, but it's the same real technique and a natural next
+   improvement once `enable_cdn` is actually exercised with real
+   traffic.
+2. **Right-sizing Fargate to the actual workload**, not a guess.
+   Going from 2 vCPU/4 GB to 0.5 vCPU/1 GB for a workload of ~20–30
+   concurrent users saved ~$84/month — a 75% cut with no visible
+   performance impact, because the original size was never based on
+   measurement. **This project starts at 0.5 vCPU/1 GB from day one**
+   (see `terraform/modules/ecs/variables.tf`) — the lesson here was
+   applied up front instead of needing a later correction.
+3. **Turning off environments nobody is actively using.** A homolog
+   environment left running 24/7 after production launch cost ~$60/
+   month for zero benefit. The equivalent here: don't leave `staging`
+   applied between test cycles — `terraform workspace select staging
+   && terraform destroy -var-file="vars/staging.tfvars"` when it's not
+   actively being tested, re-`apply` when it is.
+4. **CloudWatch log retention and verbose logging, tuned per
+   environment.** Ingestion (not storage) of ~55 GB/month of verbose
+   Moodle debug logs was 20% of the total bill — cut by turning debug
+   off in production and dropping retention from 30 to 7 days there
+   (dev/homolog kept slightly longer for active debugging). Saved
+   ~$30/month. **This project now does the equivalent** —
+   `log_retention_days` defaults to 7 (dev) / 14 (staging) / 30 (prod)
+   instead of every environment defaulting to the same value
+   indefinitely.
+
 ## The single biggest lever
 
 The NAT Gateway(s) are the largest fixed cost relative to how little
