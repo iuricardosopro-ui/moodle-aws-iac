@@ -64,3 +64,20 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "cron_cpu" {
+  description = "CPU units for the scheduled Moodle cron task. Much lighter than the app task since it runs one PHP process and exits."
+  type        = number
+  default     = 256
+}
+
+variable "cron_memory" {
+  type    = number
+  default = 512
+}
+
+variable "cron_schedule_expression" {
+  description = "EventBridge schedule expression for admin/cli/cron.php. Moodle recommends running it at least once a minute."
+  type        = string
+  default     = "rate(1 minute)"
+}
