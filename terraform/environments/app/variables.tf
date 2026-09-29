@@ -107,3 +107,9 @@ variable "acm_certificate_arn" {
   type        = string
   default     = ""
 }
+
+variable "enable_waf" {
+  description = "Attaches a WAFv2 Web ACL (managed rules + rate limit) to the ALB, and to CloudFront too when enable_cdn is also true. Off by default for dev."
+  type        = bool
+  default     = false
+}

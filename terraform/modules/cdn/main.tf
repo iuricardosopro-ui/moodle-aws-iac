@@ -45,6 +45,8 @@ resource "aws_cloudfront_distribution" "this" {
     max_ttl     = 0
   }
 
+  web_acl_id = var.web_acl_id == "" ? null : var.web_acl_id
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
