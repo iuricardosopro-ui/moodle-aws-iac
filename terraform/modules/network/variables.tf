@@ -29,3 +29,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "single_nat_gateway" {
+  description = "true = one shared NAT gateway for all AZs (cheaper, single point of failure). false = one NAT per AZ (highly available, costs one NAT Gateway per additional AZ)."
+  type        = bool
+  default     = false
+}
