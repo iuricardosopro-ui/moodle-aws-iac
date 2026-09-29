@@ -59,6 +59,7 @@ reachable from the internet.
 | `monitoring` | CloudWatch alarms, dashboard, SNS topic |
 | `cdn` | Optional CloudFront distribution in front of the ALB |
 | `dns` | Optional Route53 records for a custom domain |
+| `waf` | Reusable WAFv2 Web ACL (managed rules + rate limit) — one instance protects the ALB, another (when CDN is on) protects CloudFront |
 | `tags` | Single source of truth for the standard tag set (FinOps) |
 
 Each is wired together per environment in
@@ -84,6 +85,17 @@ Each is wired together per environment in
   visible to task B. EFS, mounted via an IAM-authenticated access point
   scoped to `/moodledata`, is what makes `desired_count > 1` safe rather
   than just "usually works."
+- **One NAT gateway per AZ by default.** A NAT/AZ outage then only
+  takes down outbound internet for that AZ's private subnets, not the
+  whole environment — high availability is a Well-Architected/SRE
+  pillar, not an optional extra. `single_nat_gateway = true` is
+  available as an explicit, named cost trade-off for dev/staging.
+- **HTTPS and WAF are both opt-in, same reasoning as CDN/DNS below.**
+  The ALB gets an HTTPS listener the moment `acm_certificate_arn` is
+  set (redirecting HTTP to it automatically), and `enable_waf` attaches
+  a WAFv2 Web ACL (AWS managed rule groups + a per-IP rate limit) to
+  the ALB, and to CloudFront too when `enable_cdn` is also on. Neither
+  needs new code to turn on later — only a certificate and a variable.
 - **CDN and DNS are both opt-in.** A CloudFront distribution and a
   Route53 record only pay for themselves once there's real traffic
   outside a single region and a domain to point at it. Dev runs without
