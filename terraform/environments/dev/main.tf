@@ -100,3 +100,17 @@ module "ecs" {
   efs_access_point_id       = module.efs.access_point_id
   tags                      = module.tags.tags
 }
+
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  project_name            = "${var.project_name}-${var.environment}"
+  aws_region               = var.aws_region
+  ecs_cluster_name         = module.ecs.cluster_name
+  ecs_service_name         = module.ecs.service_name
+  alb_arn_suffix           = module.alb.arn_suffix
+  target_group_arn_suffix  = module.alb.target_group_arn_suffix
+  rds_instance_id          = module.rds.instance_id
+  alarm_email              = var.alarm_email
+  tags                     = module.tags.tags
+}

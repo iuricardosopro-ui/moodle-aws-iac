@@ -50,3 +50,9 @@ variable "cost_center" {
   type        = string
   default     = "portfolio"
 }
+
+variable "alarm_email" {
+  description = "Email address subscribed to CloudWatch alarm notifications. Empty by default (no subscription created on a fresh apply)."
+  type        = string
+  default     = ""
+}
