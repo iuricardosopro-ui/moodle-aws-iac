@@ -28,9 +28,10 @@ terraform {
 provider "aws" {
   region = var.aws_region
 
-  default_tags {
-    tags = local.common_tags
-  }
+  # Tags are applied explicitly per resource via module.tags.tags in main.tf
+  # (see terraform/modules/tags). A provider-level default_tags block isn't
+  # needed on top of that, and an earlier version of this file referenced an
+  # undeclared `local.common_tags` here — caught by `terraform validate`.
 }
 
 # Select the environment before plan/apply:
