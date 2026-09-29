@@ -14,17 +14,17 @@ resource "aws_cloudfront_distribution" "this" {
 
     custom_origin_config {
       http_port              = 80
-      https_port              = 443
-      origin_protocol_policy  = "http-only" # the ALB has no HTTPS listener in this environment (see README)
-      origin_ssl_protocols    = ["TLSv1.2"]
+      https_port             = 443
+      origin_protocol_policy = "http-only" # the ALB has no HTTPS listener in this environment (see README)
+      origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
 
   default_cache_behavior {
     target_origin_id       = "alb-origin"
     viewer_protocol_policy = "redirect-to-https"
-    allowed_methods         = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods           = ["GET", "HEAD"]
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods         = ["GET", "HEAD"]
 
     # Moodle is a dynamic app — session cookies and CSRF tokens are on
     # nearly every request. Caching is intentionally disabled here so
@@ -56,7 +56,7 @@ resource "aws_cloudfront_distribution" "this" {
   viewer_certificate {
     cloudfront_default_certificate = var.acm_certificate_arn == "" ? true : null
     acm_certificate_arn            = var.acm_certificate_arn == "" ? null : var.acm_certificate_arn
-    ssl_support_method              = var.acm_certificate_arn == "" ? null : "sni-only"
+    ssl_support_method             = var.acm_certificate_arn == "" ? null : "sni-only"
   }
 
   tags = var.tags

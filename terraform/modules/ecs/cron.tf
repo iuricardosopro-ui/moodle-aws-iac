@@ -14,8 +14,8 @@ resource "aws_ecs_task_definition" "cron" {
   network_mode             = "awsvpc"
   cpu                      = var.cron_cpu
   memory                   = var.cron_memory
-  execution_role_arn        = aws_iam_role.execution.arn
-  task_role_arn             = aws_iam_role.task.arn
+  execution_role_arn       = aws_iam_role.execution.arn
+  task_role_arn            = aws_iam_role.task.arn
 
   container_definitions = jsonencode([
     {
@@ -96,9 +96,9 @@ resource "aws_cloudwatch_event_target" "moodle_cron" {
 
   ecs_target {
     task_definition_arn = aws_ecs_task_definition.cron.arn
-    task_count           = 1
-    launch_type           = "FARGATE"
-    platform_version      = "LATEST"
+    task_count          = 1
+    launch_type         = "FARGATE"
+    platform_version    = "LATEST"
 
     network_configuration {
       subnets          = var.private_subnet_ids
