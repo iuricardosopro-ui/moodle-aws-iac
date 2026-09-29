@@ -38,3 +38,15 @@ variable "moodle_image_tag" {
   type        = string
   default     = "latest"
 }
+
+variable "owner" {
+  description = "Person or team accountable for this environment's cost and operation (FinOps tagging)."
+  type        = string
+  default     = "iuri-cardoso"
+}
+
+variable "cost_center" {
+  description = "Cost allocation tag used for AWS Cost Explorer / budget reports (FinOps tagging)."
+  type        = string
+  default     = "portfolio"
+}

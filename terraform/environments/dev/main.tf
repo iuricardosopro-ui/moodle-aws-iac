@@ -1,9 +1,10 @@
-locals {
-  common_tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    ManagedBy   = "terraform"
-  }
+module "tags" {
+  source = "../../modules/tags"
+
+  project_name = var.project_name
+  environment  = var.environment
+  owner        = var.owner
+  cost_center  = var.cost_center
 }
 
 module "network" {
@@ -14,14 +15,14 @@ module "network" {
   azs                  = var.azs
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
-  tags                 = local.common_tags
+  tags                 = module.tags.tags
 }
 
 module "ecr" {
   source = "../../modules/ecr"
 
   project_name = "${var.project_name}-${var.environment}"
-  tags         = local.common_tags
+  tags         = module.tags.tags
 }
 
 module "alb" {
@@ -30,7 +31,7 @@ module "alb" {
   project_name      = "${var.project_name}-${var.environment}"
   vpc_id            = module.network.vpc_id
   public_subnet_ids = module.network.public_subnet_ids
-  tags              = local.common_tags
+  tags              = module.tags.tags
 }
 
 # Created here (not inside the ECS module) because both the ECS service and
@@ -57,7 +58,7 @@ resource "aws_security_group" "ecs_service" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(local.common_tags, { Name = "${var.project_name}-${var.environment}-ecs-sg" })
+  tags = merge(module.tags.tags, { Name = "${var.project_name}-${var.environment}-ecs-sg" })
 }
 
 module "rds" {
@@ -67,7 +68,7 @@ module "rds" {
   vpc_id                     = module.network.vpc_id
   private_subnet_ids         = module.network.private_subnet_ids
   allowed_security_group_ids = [aws_security_group.ecs_service.id]
-  tags                       = local.common_tags
+  tags                       = module.tags.tags
 }
 
 module "ecs" {
@@ -84,5 +85,5 @@ module "ecs" {
   db_endpoint               = module.rds.endpoint
   db_name                   = module.rds.db_name
   db_secret_arn             = module.rds.secret_arn
-  tags                      = local.common_tags
+  tags                      = module.tags.tags
 }
