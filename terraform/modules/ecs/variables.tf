@@ -81,3 +81,15 @@ variable "cron_schedule_expression" {
   type        = string
   default     = "rate(1 minute)"
 }
+
+variable "efs_file_system_id" {
+  type = string
+}
+
+variable "efs_file_system_arn" {
+  type = string
+}
+
+variable "efs_access_point_id" {
+  type = string
+}
