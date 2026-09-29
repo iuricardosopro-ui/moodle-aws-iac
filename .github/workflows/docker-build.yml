@@ -12,8 +12,7 @@ permissions:
   id-token: write # OIDC auth to AWS, no static keys
 
 env:
-  ECR_REPOSITORY: moodle-portfolio-dev-moodle
-  AWS_REGION: us-east-1
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
 
 jobs:
   build-and-push:

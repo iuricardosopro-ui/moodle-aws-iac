@@ -30,6 +30,7 @@ permissions:
 
 env:
   TF_WORKING_DIR: terraform/environments/app
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
 
 jobs:
   lint:
@@ -70,7 +71,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_TERRAFORM_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: terraform init
         working-directory: ${{ env.TF_WORKING_DIR }}
@@ -103,7 +104,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_TERRAFORM_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: terraform init
         working-directory: ${{ env.TF_WORKING_DIR }}
