@@ -106,3 +106,10 @@ them, in [docs/deployment-guide.md](docs/deployment-guide.md).
 - **Tighten the new `security-scan` CI job** from report-only
   (`soft_fail`/`exit-code 0`) to actually blocking, once the first
   checkov/Trivy findings against this codebase have been triaged
+
+## Author
+
+Iúri Bacharel Andrade Cardoso — Cloud/DevOps engineer.
+[LinkedIn](https://www.linkedin.com/) · [GitHub](https://github.com/iuricardosopro-ui)
+
+Licensed under the [MIT License](LICENSE).
