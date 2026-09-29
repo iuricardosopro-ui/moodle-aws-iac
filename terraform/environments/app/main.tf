@@ -29,11 +29,11 @@ module "ecr" {
 module "alb" {
   source = "../../modules/alb"
 
-  project_name         = "${var.project_name}-${var.environment}"
-  vpc_id               = module.network.vpc_id
-  public_subnet_ids    = module.network.public_subnet_ids
-  acm_certificate_arn  = var.acm_certificate_arn
-  tags                 = module.tags.tags
+  project_name        = "${var.project_name}-${var.environment}"
+  vpc_id              = module.network.vpc_id
+  public_subnet_ids   = module.network.public_subnet_ids
+  acm_certificate_arn = var.acm_certificate_arn
+  tags                = module.tags.tags
 }
 
 module "waf_alb" {
@@ -82,11 +82,11 @@ resource "aws_security_group" "ecs_service" {
 module "efs" {
   source = "../../modules/efs"
 
-  project_name           = "${var.project_name}-${var.environment}"
-  vpc_id                 = module.network.vpc_id
-  private_subnet_ids     = module.network.private_subnet_ids
-  ecs_security_group_id  = aws_security_group.ecs_service.id
-  tags                   = module.tags.tags
+  project_name          = "${var.project_name}-${var.environment}"
+  vpc_id                = module.network.vpc_id
+  private_subnet_ids    = module.network.private_subnet_ids
+  ecs_security_group_id = aws_security_group.ecs_service.id
+  tags                  = module.tags.tags
 }
 
 module "rds" {
@@ -96,10 +96,10 @@ module "rds" {
   vpc_id                     = module.network.vpc_id
   private_subnet_ids         = module.network.private_subnet_ids
   allowed_security_group_ids = [aws_security_group.ecs_service.id]
-  instance_class              = var.db_instance_class
-  multi_az                    = var.db_multi_az
-  deletion_protection          = var.db_deletion_protection
-  tags                        = module.tags.tags
+  instance_class             = var.db_instance_class
+  multi_az                   = var.db_multi_az
+  deletion_protection        = var.db_deletion_protection
+  tags                       = module.tags.tags
 }
 
 module "ecs" {
@@ -128,14 +128,14 @@ module "monitoring" {
   source = "../../modules/monitoring"
 
   project_name            = "${var.project_name}-${var.environment}"
-  aws_region               = var.aws_region
-  ecs_cluster_name         = module.ecs.cluster_name
-  ecs_service_name         = module.ecs.service_name
-  alb_arn_suffix           = module.alb.arn_suffix
-  target_group_arn_suffix  = module.alb.target_group_arn_suffix
-  rds_instance_id          = module.rds.instance_id
-  alarm_email              = var.alarm_email
-  tags                     = module.tags.tags
+  aws_region              = var.aws_region
+  ecs_cluster_name        = module.ecs.cluster_name
+  ecs_service_name        = module.ecs.service_name
+  alb_arn_suffix          = module.alb.arn_suffix
+  target_group_arn_suffix = module.alb.target_group_arn_suffix
+  rds_instance_id         = module.rds.instance_id
+  alarm_email             = var.alarm_email
+  tags                    = module.tags.tags
 }
 
 module "waf_cdn" {
