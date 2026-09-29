@@ -20,7 +20,8 @@ FinOps tagging end to end.
 - [**Runbook**](docs/runbook.md) — what to check when the ECS service is
   unhealthy, cron stops running, uploads disappear, or an alarm fires
 - [**Cost analysis**](docs/cost-analysis.md) — estimated monthly cost per
-  environment and the single biggest lever to reduce it
+  environment, the single biggest lever to reduce it, and a cost
+  optimization playbook drawn from a real production Moodle deployment
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — branch naming and commit
   convention used in this repo's history
 
@@ -102,3 +103,13 @@ them, in [docs/deployment-guide.md](docs/deployment-guide.md).
 - **tflint / checkov / tfsec in CI** — static analysis and security
   scanning of the Terraform itself, before `plan` ever runs
 - **Automated tests** — none exist yet, at any level (module, integration)
+- **Tighten the new `security-scan` CI job** from report-only
+  (`soft_fail`/`exit-code 0`) to actually blocking, once the first
+  checkov/Trivy findings against this codebase have been triaged
+
+## Author
+
+Iúri Bacharel Andrade Cardoso — Cloud/DevOps engineer.
+[GitHub](https://github.com/iuricardosopro-ui)
+
+Licensed under the [MIT License](LICENSE).

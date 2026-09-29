@@ -93,3 +93,9 @@ variable "efs_file_system_arn" {
 variable "efs_access_point_id" {
   type = string
 }
+
+variable "log_retention_days" {
+  description = "CloudWatch log retention. Real production Moodle logging can run verbose enough that log ingestion becomes one of the largest line items on the bill (see docs/cost-analysis.md) — keep this short in dev/staging and only as long as actually needed in prod."
+  type        = number
+  default     = 14
+}

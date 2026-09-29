@@ -54,9 +54,49 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform validate
 
+  security-scan:
+    name: Lint & security scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # tflint: provider-aware linting (catches things terraform validate
+      # doesn't, like an instance type that doesn't exist for a given
+      # engine, or a deprecated argument).
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: tflint
+        run: |
+          tflint --init
+          tflint --recursive --chdir=terraform
+
+      # checkov: security/compliance misconfigurations (open security
+      # groups, missing encryption, no deletion protection, etc).
+      - name: checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform
+          framework: terraform
+          quiet: true
+          soft_fail: true # report findings without failing the build yet — see README
+
+      # tfsec's checks now live inside Trivy's IaC config scanner, so this
+      # reuses the same tool already used for the Docker image scan
+      # (docker-build.yml) instead of adding a second, now-unmaintained
+      # standalone tfsec action.
+      - name: Trivy IaC config scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: "config"
+          scan-ref: "terraform"
+          severity: "HIGH,CRITICAL"
+          exit-code: "0" # report only — see README on why this isn't blocking yet
+
   plan:
     name: Plan
-    needs: lint
+    needs: [lint, security-scan]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'plan')
     steps:
@@ -87,7 +127,7 @@ jobs:
 
   apply:
     name: Apply
-    needs: lint
+    needs: [lint, security-scan]
     runs-on: ubuntu-latest
     # Manual trigger only — no automatic apply on push, to keep this
     # portfolio project from accidentally provisioning real AWS spend.
