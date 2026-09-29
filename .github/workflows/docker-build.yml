@@ -5,7 +5,14 @@ on:
     branches: [main]
     paths:
       - "docker/**"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy the new image to"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, staging, prod]
 
 permissions:
   contents: read
@@ -13,6 +20,10 @@ permissions:
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  # A plain push to main (no workflow_dispatch input) always targets dev —
+  # promoting the same image to staging/prod is a deliberate manual
+  # workflow_dispatch, same as terraform.yml's apply job.
+  PROJECT_ENV: ${{ github.event.inputs.environment || 'dev' }}
 
 jobs:
   build-and-push:
@@ -31,30 +42,37 @@ jobs:
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Resolve environment-scoped resource names
+        id: names
+        run: |
+          echo "ecr_repository=moodle-portfolio-${PROJECT_ENV}-moodle" >> "$GITHUB_OUTPUT"
+          echo "ecs_cluster=moodle-portfolio-${PROJECT_ENV}-cluster" >> "$GITHUB_OUTPUT"
+          echo "ecs_service=moodle-portfolio-${PROJECT_ENV}-moodle-svc" >> "$GITHUB_OUTPUT"
+
       - name: Build image
         working-directory: docker
         run: |
           docker build \
-            --tag "${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" \
-            --tag "${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" \
+            --tag "${{ steps.ecr-login.outputs.registry }}/${{ steps.names.outputs.ecr_repository }}:${{ github.sha }}" \
+            --tag "${{ steps.ecr-login.outputs.registry }}/${{ steps.names.outputs.ecr_repository }}:latest" \
             .
 
       # Fails the build on HIGH/CRITICAL CVEs instead of shipping them silently.
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@0.24.0
         with:
-          image-ref: "${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+          image-ref: "${{ steps.ecr-login.outputs.registry }}/${{ steps.names.outputs.ecr_repository }}:${{ github.sha }}"
           severity: "HIGH,CRITICAL"
           exit-code: "1"
 
       - name: Push image (immutable tag + latest)
         run: |
-          docker push "${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
-          docker push "${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
+          docker push "${{ steps.ecr-login.outputs.registry }}/${{ steps.names.outputs.ecr_repository }}:${{ github.sha }}"
+          docker push "${{ steps.ecr-login.outputs.registry }}/${{ steps.names.outputs.ecr_repository }}:latest"
 
       - name: Update ECS service with the new image
         run: |
           aws ecs update-service \
-            --cluster moodle-portfolio-dev-cluster \
-            --service moodle-portfolio-dev-moodle-svc \
+            --cluster "${{ steps.names.outputs.ecs_cluster }}" \
+            --service "${{ steps.names.outputs.ecs_service }}" \
             --force-new-deployment
