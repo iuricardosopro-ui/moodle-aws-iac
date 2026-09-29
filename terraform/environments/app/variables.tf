@@ -95,3 +95,9 @@ variable "db_deletion_protection" {
   type    = bool
   default = false
 }
+
+variable "single_nat_gateway" {
+  description = "Passed through to the network module. false (default) = one NAT per AZ for high availability. dev/staging tfvars set this to true to save cost; prod keeps the default."
+  type        = bool
+  default     = false
+}
