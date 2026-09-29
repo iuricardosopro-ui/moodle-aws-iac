@@ -22,3 +22,9 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "web_acl_id" {
+  description = "ARN of a CLOUDFRONT-scoped WAFv2 Web ACL to attach. Empty by default (no WAF)."
+  type        = string
+  default     = ""
+}

@@ -36,6 +36,22 @@ module "alb" {
   tags                 = module.tags.tags
 }
 
+module "waf_alb" {
+  count  = var.enable_waf ? 1 : 0
+  source = "../../modules/waf"
+
+  project_name = "${var.project_name}-${var.environment}"
+  scope        = "REGIONAL"
+  scope_suffix = "alb"
+  tags         = module.tags.tags
+}
+
+resource "aws_wafv2_web_acl_association" "alb" {
+  count        = var.enable_waf ? 1 : 0
+  resource_arn = module.alb.arn
+  web_acl_arn  = module.waf_alb[0].web_acl_arn
+}
+
 # Created here (not inside the ECS module) because both the ECS service and
 # the RDS module's ingress rule need to reference it — declaring it inside
 # either module would create a module dependency cycle (ECS needs RDS's
@@ -121,13 +137,25 @@ module "monitoring" {
   tags                     = module.tags.tags
 }
 
+module "waf_cdn" {
+  count  = var.enable_waf && var.enable_cdn ? 1 : 0
+  source = "../../modules/waf"
+
+  project_name = "${var.project_name}-${var.environment}"
+  scope        = "CLOUDFRONT"
+  scope_suffix = "cdn"
+  tags         = module.tags.tags
+}
+
 module "cdn" {
   count  = var.enable_cdn ? 1 : 0
   source = "../../modules/cdn"
 
-  project_name = "${var.project_name}-${var.environment}"
-  alb_dns_name = module.alb.dns_name
-  tags         = module.tags.tags
+  project_name        = "${var.project_name}-${var.environment}"
+  alb_dns_name        = module.alb.dns_name
+  acm_certificate_arn = var.acm_certificate_arn
+  web_acl_id          = coalesce(one(module.waf_cdn[*].web_acl_arn), "")
+  tags                = module.tags.tags
 }
 
 module "dns" {
