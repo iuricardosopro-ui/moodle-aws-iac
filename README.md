@@ -88,6 +88,32 @@ them, in [docs/deployment-guide.md](docs/deployment-guide.md).
     └── docker-build.yml        # build → scan → push → force new deployment
 ```
 
+## Challenges & how they were solved
+
+- **Keeping secrets out of the image and out of `config.php`.** Database
+  credentials needed to exist somewhere, but never in version control or
+  in the container image. Solved by generating them with Terraform
+  (`random_password`), storing them in Secrets Manager, and injecting
+  them into the ECS task at runtime via the task definition's `secrets`
+  block — see [architecture.md](docs/architecture.md).
+- **Running `cron.php` reliably with more than one app task.** A
+  `while true; sleep 60` loop baked into the main container mixes two
+  independent lifecycles into one process, and fails silently in ways
+  that are hard to notice. Solved with a separate, EventBridge-triggered
+  Fargate task that runs cron on its own schedule, independent of the
+  app tasks' scaling or health.
+- **Letting multiple ECS tasks share uploaded files safely.** With
+  `desired_count > 1`, a file uploaded to task A must be visible to task
+  B. Solved with EFS, mounted through an IAM-authenticated access point
+  scoped to `/moodledata`, instead of task-local storage.
+- **Giving an honest cost estimate instead of a plausible-sounding one.**
+  An earlier pass estimated monthly costs from general knowledge of AWS
+  pricing, without checking current rates — numbers that looked precise
+  but weren't actually sourced. Fixed by rechecking every figure against
+  AWS's own pricing pages (dated), and stating openly which numbers
+  changed and why — see the note at the top of
+  [cost-analysis.md](docs/cost-analysis.md).
+
 ## What I'd still change for a heavier production load
 
 - **A real ACM certificate + domain**, to actually turn on the HTTPS
