@@ -107,9 +107,7 @@ module "ecs" {
 
   project_name              = "${var.project_name}-${var.environment}"
   desired_count             = var.desired_count
-  vpc_id                    = module.network.vpc_id
   private_subnet_ids        = module.network.private_subnet_ids
-  alb_security_group_id     = module.alb.security_group_id
   service_security_group_id = aws_security_group.ecs_service.id
   target_group_arn          = module.alb.target_group_arn
   ecr_repository_url        = module.ecr.repository_url
@@ -134,6 +132,7 @@ module "monitoring" {
   alb_arn_suffix          = module.alb.arn_suffix
   target_group_arn_suffix = module.alb.target_group_arn_suffix
   rds_instance_id         = module.rds.instance_id
+  efs_file_system_id      = module.efs.file_system_id
   alarm_email             = var.alarm_email
   tags                    = module.tags.tags
 }

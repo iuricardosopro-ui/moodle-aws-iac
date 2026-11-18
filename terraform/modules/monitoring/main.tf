@@ -15,6 +15,9 @@ resource "aws_sns_topic_subscription" "email" {
   endpoint  = var.alarm_email
 }
 
+# CPU and memory alarms use Maximum, not Average: with several tasks, one
+# saturated task is averaged away by the idle ones and the alarm never
+# fires while that task's users are getting timeouts.
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   alarm_name          = "${var.project_name}-ecs-cpu-high"
   comparison_operator = "GreaterThanThreshold"
@@ -22,9 +25,9 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   metric_name         = "CPUUtilization"
   namespace           = "AWS/ECS"
   period              = 60
-  statistic           = "Average"
+  statistic           = "Maximum"
   threshold           = 80
-  alarm_description   = "ECS service CPU above 80% for 3 consecutive minutes"
+  alarm_description   = "CPU of the busiest ECS task above 80% for 3 consecutive minutes"
 
   dimensions = {
     ClusterName = var.ecs_cluster_name
@@ -43,9 +46,9 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
   metric_name         = "MemoryUtilization"
   namespace           = "AWS/ECS"
   period              = 60
-  statistic           = "Average"
+  statistic           = "Maximum"
   threshold           = 80
-  alarm_description   = "ECS service memory above 80% for 3 consecutive minutes"
+  alarm_description   = "Memory of the busiest ECS task above 80% for 3 consecutive minutes"
 
   dimensions = {
     ClusterName = var.ecs_cluster_name
@@ -113,6 +116,31 @@ resource "aws_cloudwatch_metric_alarm" "rds_free_storage_low" {
   }
 
   alarm_actions = [aws_sns_topic.alarms.arn]
+  tags          = var.tags
+}
+
+# EFS in bursting mode spends burst credits whenever it runs above its
+# baseline throughput. When the credits run out, throughput drops to the
+# baseline and every request that touches moodledata gets slow, while
+# ECS CPU and memory still look normal. This alarm warns before that.
+resource "aws_cloudwatch_metric_alarm" "efs_burst_credits_low" {
+  alarm_name          = "${var.project_name}-efs-burst-credits-low"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "BurstCreditBalance"
+  namespace           = "AWS/EFS"
+  period              = 300
+  statistic           = "Minimum"
+  threshold           = var.efs_burst_credit_threshold_bytes
+  treat_missing_data  = "notBreaching" # no data in elastic/provisioned throughput mode
+  alarm_description   = "EFS burst credits running low: throughput will soon drop to the baseline"
+
+  dimensions = {
+    FileSystemId = var.efs_file_system_id
+  }
+
+  alarm_actions = [aws_sns_topic.alarms.arn]
+  ok_actions    = [aws_sns_topic.alarms.arn]
   tags          = var.tags
 }
 

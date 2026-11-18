@@ -2,16 +2,8 @@ variable "project_name" {
   type = string
 }
 
-variable "vpc_id" {
-  type = string
-}
-
 variable "private_subnet_ids" {
   type = list(string)
-}
-
-variable "alb_security_group_id" {
-  type = string
 }
 
 variable "service_security_group_id" {
@@ -98,4 +90,10 @@ variable "log_retention_days" {
   description = "CloudWatch log retention. Real production Moodle logging can run verbose enough that log ingestion becomes one of the largest line items on the bill (see docs/cost-analysis.md) — keep this short in dev/staging and only as long as actually needed in prod."
   type        = number
   default     = 14
+}
+
+variable "health_check_grace_period_seconds" {
+  description = "Seconds ECS ignores failing ALB health checks after a task starts. Covers the entrypoint's database wait (up to ~150 s) plus the ALB healthy threshold."
+  type        = number
+  default     = 180
 }
