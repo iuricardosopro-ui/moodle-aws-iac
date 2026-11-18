@@ -36,3 +36,14 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "efs_file_system_id" {
+  description = "EFS file system holding moodledata, watched by the burst credit alarm."
+  type        = string
+}
+
+variable "efs_burst_credit_threshold_bytes" {
+  description = "Alarm when the EFS BurstCreditBalance falls below this many bytes. A new file system starts with about 2.1 TiB; the default (1 TiB) warns once roughly half is gone."
+  type        = number
+  default     = 1099511627776
+}

@@ -106,6 +106,19 @@ them, in [docs/deployment-guide.md](docs/deployment-guide.md).
   `desired_count > 1`, a file uploaded to task A must be visible to task
   B. Solved with EFS, mounted through an IAM-authenticated access point
   scoped to `/moodledata`, instead of task-local storage.
+- **Making bad deploys and slow storage visible and self-correcting.**
+  A review of the setup found failure modes the original alarms and
+  deploy settings would not catch: a broken image could leave the
+  service retrying forever, a task still waiting for the database could
+  be killed as unhealthy, one saturated task was hidden by averaging,
+  EFS could quietly run out of burst credits, CloudFront cut slow pages
+  off at 30 s, and the cron task ran without the shared `moodledata`
+  mount. Solved with a deployment circuit breaker with automatic
+  rollback, a start-first rollout (100/200) and a health check grace
+  period on the ECS service; alarms on `Maximum` instead of `Average`;
+  an EFS `BurstCreditBalance` alarm; a configurable CloudFront
+  `origin_read_timeout` (60 s); and the same EFS access point mounted in
+  the cron task.
 - **Giving an honest cost estimate instead of a plausible-sounding one.**
   An earlier pass estimated monthly costs from general knowledge of AWS
   pricing, without checking current rates — numbers that looked precise
@@ -128,6 +141,9 @@ them, in [docs/deployment-guide.md](docs/deployment-guide.md).
   no-cache-anywhere default
 - **tflint / checkov / tfsec in CI** — static analysis and security
   scanning of the Terraform itself, before `plan` ever runs
+- **EFS throughput mode** — evaluate `elastic` instead of `bursting` once
+  real usage data exists; the burst credit alarm shows whether the
+  baseline is actually being outgrown
 - **Automated tests** — none exist yet, at any level (module, integration)
 - **Tighten the new `security-scan` CI job** from report-only
   (`soft_fail`/`exit-code 0`) to actually blocking, once the first

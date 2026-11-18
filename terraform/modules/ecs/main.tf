@@ -149,8 +149,25 @@ resource "aws_ecs_service" "moodle" {
     container_port   = 8080
   }
 
-  deployment_minimum_healthy_percent = 50
+  # Start-first rollout: replacement tasks must pass the ALB health check
+  # before old ones are stopped (100/200), so a deploy never drops
+  # capacity below the desired count.
+  deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
+
+  # Roll back to the last working task definition if new tasks never
+  # reach a steady, healthy state (crash loop, failing health check),
+  # instead of leaving the service retrying a broken image.
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
+  # The entrypoint waits up to ~150 s for the database before Apache
+  # starts, and the ALB needs consecutive passing checks to mark a target
+  # healthy. Without a grace period ECS can kill a task that is still
+  # booting, which looks like a crash loop.
+  health_check_grace_period_seconds = var.health_check_grace_period_seconds
 
   tags = var.tags
 }

@@ -134,6 +134,7 @@ module "monitoring" {
   alb_arn_suffix          = module.alb.arn_suffix
   target_group_arn_suffix = module.alb.target_group_arn_suffix
   rds_instance_id         = module.rds.instance_id
+  efs_file_system_id      = module.efs.file_system_id
   alarm_email             = var.alarm_email
   tags                    = module.tags.tags
 }

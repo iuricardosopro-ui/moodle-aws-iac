@@ -28,3 +28,14 @@ variable "web_acl_id" {
   type        = string
   default     = ""
 }
+
+variable "origin_read_timeout" {
+  description = "Seconds CloudFront waits for the ALB to respond before returning 504. AWS default is 30; up to 60 needs no quota increase, up to 180 with one."
+  type        = number
+  default     = 60
+
+  validation {
+    condition     = var.origin_read_timeout >= 1 && var.origin_read_timeout <= 180
+    error_message = "origin_read_timeout must be between 1 and 180 seconds."
+  }
+}

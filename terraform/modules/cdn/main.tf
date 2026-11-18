@@ -17,6 +17,7 @@ resource "aws_cloudfront_distribution" "this" {
       https_port             = 443
       origin_protocol_policy = "http-only" # the ALB has no HTTPS listener in this environment (see README)
       origin_ssl_protocols   = ["TLSv1.2"]
+      origin_read_timeout    = var.origin_read_timeout # default 30 s cuts off slow Moodle pages (reports, backups, course restores)
     }
   }
 

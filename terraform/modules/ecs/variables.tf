@@ -99,3 +99,9 @@ variable "log_retention_days" {
   type        = number
   default     = 14
 }
+
+variable "health_check_grace_period_seconds" {
+  description = "Seconds ECS ignores failing ALB health checks after a task starts. Covers the entrypoint's database wait (up to ~150 s) plus the ALB healthy threshold."
+  type        = number
+  default     = 180
+}

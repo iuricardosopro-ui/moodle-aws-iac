@@ -17,6 +17,24 @@ resource "aws_ecs_task_definition" "cron" {
   execution_role_arn       = aws_iam_role.execution.arn
   task_role_arn            = aws_iam_role.task.arn
 
+  # cron.php reads and writes moodledata (locks, temp files, scheduled
+  # backups, file cleanup). It needs the same EFS mount as the app tasks;
+  # without it, it runs against an empty local directory and fails or
+  # silently skips work.
+  volume {
+    name = "moodledata"
+
+    efs_volume_configuration {
+      file_system_id     = var.efs_file_system_id
+      transit_encryption = "ENABLED"
+
+      authorization_config {
+        access_point_id = var.efs_access_point_id
+        iam             = "ENABLED"
+      }
+    }
+  }
+
   container_definitions = jsonencode([
     {
       name      = "moodle-cron"
@@ -26,6 +44,9 @@ resource "aws_ecs_task_definition" "cron" {
       # cron.php once and exit — EventBridge starts a fresh task on
       # every trigger, so there is no long-running process to manage.
       command = ["php", "/var/www/html/admin/cli/cron.php"]
+      mountPoints = [
+        { sourceVolume = "moodledata", containerPath = "/var/www/moodledata", readOnly = false }
+      ]
       environment = [
         { name = "MOODLE_DATABASE_HOST", value = var.db_endpoint },
         { name = "MOODLE_DATABASE_NAME", value = var.db_name },
